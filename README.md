@@ -99,3 +99,44 @@ month = {June},
 year = {2020}
 }
 ```
+
+```
+ndcg@1:0.27334437086092717, hit@1:0.27334437086092717， ndcg@5:0.4350090955373317, hit@5:0.5786423841059603, ndcg@10:0.4701029856279757, hit@10:0.6867549668874172, ap:0.41375562287737444, valid_user:6040.0
+
+INFO:tensorflow:Finished evaluation at 2021-02-07-00:23:19
+I0207 00:23:19.007557 140642322712384 evaluation.py:275] Finished evaluation at 2021-02-07-00:23:19
+INFO:tensorflow:Saving dict for global step 400000: global_step = 400000, loss = 6.100204, masked_lm_accuracy = 0.02615894, masked_lm_loss = 6.0999246
+I0207 00:23:19.007871 140642322712384 estimator.py:2049] Saving dict for global step 400000: global_step = 400000, loss = 6.100204, masked_lm_accuracy = 0.02615894, masked_lm_loss = 6.0999246
+INFO:tensorflow:Saving 'checkpoint_path' summary for global step 400000: ./BERT4Rec-MultiSeq/ml-1m-mp1.0-sw0.5-mlp0.2-df10-mpps40-msl200-64/model.ckpt-400000
+I0207 00:23:19.275999 140642322712384 estimator.py:2109] Saving 'checkpoint_path' summary for global step 400000: ./BERT4Rec-MultiSeq/ml-1m-mp1.0-sw0.5-mlp0.2-df10-mpps40-msl200-64/model.ckpt-400000
+INFO:tensorflow:***** Eval results *****
+I0207 00:23:19.293869 140642322712384 run.py:588] ***** Eval results *****
+INFO:tensorflow:{
+  "attention_probs_dropout_prob": 0.2,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.2,
+  "hidden_size": 64,
+  "initializer_range": 0.02,
+  "intermediate_size": 256,
+  "max_position_embeddings": 200,
+  "num_attention_heads": 2,
+  "num_hidden_layers": 2,
+  "type_vocab_size": 2,
+  "vocab_size": 3420
+}
+
+I0207 00:23:19.294348 140642322712384 run.py:589] {
+  "attention_probs_dropout_prob": 0.2,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.2,
+  "hidden_size": 64,
+  "initializer_range": 0.02,
+  "intermediate_size": 256,
+  "max_position_embeddings": 200,
+  "num_attention_heads": 2,
+  "num_hidden_layers": 2,
+  "type_vocab_size": 2,
+  "vocab_size": 3420
+}
+INFO:tensorflow:  global_step = 400000
+```

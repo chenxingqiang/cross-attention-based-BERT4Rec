@@ -553,7 +553,7 @@ def create_attention_mask_from_input_mask(from_tensor, to_mask):
     return mask
 
 
-def attention_layer(from_tensor,
+def cross_attention_layer(from_tensor,
                     to_tensor,
                     attention_mask=None,
                     num_attention_heads=1,
@@ -571,7 +571,7 @@ def attention_layer(from_tensor,
 
     This is an implementation of multi-headed attention based on "Attention
     is all you Need". If `from_tensor` and `to_tensor` are the same, then
-    this is self-attention. Each timestep in `from_tensor` attends to the
+    this is self-attention. Each timestamp in `from_tensor` attends to the
     corresponding sequence in `to_tensor`, and returns a fixed-with vector.
 
     This function first projects `from_tensor` into a "query" tensor and
@@ -647,7 +647,7 @@ def attention_layer(from_tensor,
         if (batch_size is None or from_seq_length is None
                 or to_seq_length is None):
             raise ValueError(
-                "When passing in rank 2 tensors to attention_layer, the values "
+                "When passing in rank 2 tensors to cross_attention_layer, the values "
                 "for `batch_size`, `from_seq_length`, and `to_seq_length` "
                 "must all be specified.")
 
@@ -701,9 +701,6 @@ def attention_layer(from_tensor,
     attention_scores = tf.matmul(query_layer, key_layer, transpose_b=True)
     attention_scores = tf.multiply(attention_scores,
                                    1.0 / math.sqrt(float(size_per_head)))
-    # `cross_attention_scores` = [B,N,T,T]
-    cross_attention_scores = tf.matmul(attention_scores,attention_scores,transpose_a=True)
-
     if attention_mask is not None:
         # `attention_mask` = [B, 1, F, T]
         attention_mask = tf.expand_dims(attention_mask, axis=[1])
@@ -720,52 +717,53 @@ def attention_layer(from_tensor,
     # Normalize the attention scores to probabilities.
     # `attention_probs` = [B, N, F, T]
     attention_probs = tf.nn.softmax(attention_scores)
-    # `cross_attention_probs` = [B, N, T, T]
-    cross_attention_probs = tf.nn.softmax(cross_attention_scores,axis=-2)
 
     # This is actually dropping out entire tokens to attend to, which might
     # seem a bit unusual, but is taken from the original Transformer paper.
     attention_probs = dropout(attention_probs, attention_probs_dropout_prob)
-    cross_attention_probs = dropout(cross_attention_probs, attention_probs_dropout_prob)
+    # `attention_probs`= [B, F, N, T]
+    attention_probs_head = tf.transpose(attention_probs, [0, 2, 1, 3])
+    # `cross_head_attention` = [B , F, N, N]
+    cross_head_attention = tf.matmul(attention_probs_head,attention_probs_head,transpose_b=True)
+    cross_head_probs = tf.nn.softmax(cross_head_attention)
 
     # `value_layer` = [B, T, N, H]
     value_layer = tf.reshape(
         value_layer,
         [batch_size, to_seq_length, num_attention_heads, size_per_head])
+    # `cross_head_context_layer` = [B, F, N, H]
+    cross_head_context_layer = tf.matmul(cross_head_probs, value_layer)
 
     # `value_layer` = [B, N, T, H]
     value_layer = tf.transpose(value_layer, [0, 2, 1, 3])
 
     # `context_layer` = [B, N, F, H]
     context_layer = tf.matmul(attention_probs, value_layer)
-    # `cross_context_layer` = [B, N, T, H]
-    cross_context_layer = tf.matmul(cross_attention_probs, value_layer)
 
     # `context_layer` = [B, F, N, H]
     context_layer = tf.transpose(context_layer, [0, 2, 1, 3])
-    # `cross_context_layer` = [B, T, N, H]
-    cross_context_layer = tf.transpose(cross_context_layer, [0, 2, 1, 3])
 
     if do_return_2d_tensor:
         # `context_layer` = [B*F, N*H]
         context_layer = tf.reshape(context_layer, [
             batch_size * from_seq_length, num_attention_heads * size_per_head
         ])
-        # `context_layer` = [B*T, N*H]
-        cross_context_layer = tf.reshape(cross_context_layer, [
-            batch_size * to_seq_length, num_attention_heads * size_per_head
+        # `cross_head_context_layer` = [B*F, N*H]
+        cross_head_context_layer = tf.reshape(cross_head_context_layer, [
+            batch_size * from_seq_length, num_attention_heads * size_per_head
         ])
+
     else:
         # `context_layer` = [B, F, N*H]
         context_layer = tf.reshape(
             context_layer,
             [batch_size, from_seq_length, num_attention_heads * size_per_head])
-        # `context_layer` = [B, T, N*H]
-        cross_context_layer = tf.reshape(
-            cross_context_layer,
-            [batch_size, to_seq_length, num_attention_heads * size_per_head])
+        # `cross_head_context_layer` = [B, F, N*H]
+        cross_head_context_layer = tf.reshape(
+            cross_head_context_layer,
+            [batch_size, from_seq_length, num_attention_heads * size_per_head])
 
-    return context_layer,cross_context_layer
+    return tf.add(context_layer,cross_head_context_layer)
 
 
 def transformer_model(input_tensor,
@@ -847,9 +845,8 @@ def transformer_model(input_tensor,
 
             with tf.variable_scope("attention"):
                 attention_heads = []
-                cross_attention_heads = []
                 with tf.variable_scope("self"):
-                    attention_head,cross_attention_head = attention_layer(
+                    attention_head = cross_attention_layer(
                         from_tensor=layer_input,
                         to_tensor=layer_input,
                         attention_mask=attention_mask,
@@ -863,7 +860,6 @@ def transformer_model(input_tensor,
                         from_seq_length=seq_length,
                         to_seq_length=seq_length)
                     attention_heads.append(attention_head)
-                    cross_attention_heads.append(cross_attention_head)
 
                 attention_output = None
                 if len(attention_heads) == 1:
@@ -873,20 +869,12 @@ def transformer_model(input_tensor,
                     # them to the self-attention head before the projection.
                     attention_output = tf.concat(attention_heads, axis=-1)
 
-                cross_attention_output = None
-                if len(cross_attention_heads) == 1:
-                    cross_attention_output = cross_attention_heads[0]
-                else:
-                    # In the case where we have other sequences, we just concatenate
-                    # them to the self-attention head before the projection.
-                    cross_attention_output = tf.concat(cross_attention_heads, axis=-1)
-
                 # Run a linear projection of `hidden_size` then add a residual
                 # with `layer_input`.
-                all_attention_output = tf.concat([cross_attention_output,attention_output],axis=1)
+
                 with tf.variable_scope("output"):
                     attention_output = tf.layers.dense(
-                        all_attention_output,
+                        attention_output,
                         hidden_size,
                         kernel_initializer=create_initializer(
                             initializer_range))

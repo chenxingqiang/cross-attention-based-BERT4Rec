@@ -50,7 +50,7 @@ flags.DEFINE_string(
 
 flags.DEFINE_string("signature", 'default', "signature_name")
 
-## Other parameters
+# Other parameters
 flags.DEFINE_string(
     "init_checkpoint", None,
     "Initial checkpoint (usually from a pre-trained BERT model).")
