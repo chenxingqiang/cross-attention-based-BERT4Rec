@@ -91,3 +91,11 @@ json in `bert_train` like `bert_config_ml-1m_64.json`
  address = {New York, NY, USA}
 } 
 ```
+```@InProceedings{Yu_2020_CVPR,
+author = {Yu, Yuechen and Xiong, Yilei and Huang, Weilin and Scott, Matthew R.},
+title = {Deformable Siamese Attention Networks for Visual Object Tracking},
+booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+month = {June},
+year = {2020}
+}
+```
