@@ -1,4 +1,4 @@
-# BERT4Rec
+# Cross-Attention Based BERT4Rec
 
 
 ## Usage
