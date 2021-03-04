@@ -140,3 +140,51 @@ I0207 00:23:19.294348 140642322712384 run.py:589] {
 }
 INFO:tensorflow:  global_step = 400000
 ```
+
+```
+ndcg@1:0.26903973509933776, hit@1:0.26903973509933776， ndcg@5:0.42775598147095745, hit@5:0.5695364238410596, ndcg@10:0.46340664581866337, hit@10:0.6791390728476822, ap:0.4077645664291678, valid_user:6040.0
+INFO:tensorflow:Finished evaluation at 2021-02-24-10:05:13
+I0224 10:05:13.598598 140640140453696 evaluation.py:275] Finished evaluation at 2021-02-24-10:05:13
+INFO:tensorflow:Saving dict for global step 400000: global_step = 400000, loss = 6.0340858, masked_lm_accuracy = 0.02615894, masked_lm_loss = 6.034216
+I0224 10:05:13.598937 140640140453696 estimator.py:2049] Saving dict for global step 400000: global_step = 400000, loss = 6.0340858, masked_lm_accuracy = 0.02615894, masked_lm_loss = 6.034216
+INFO:tensorflow:Saving 'checkpoint_path' summary for global step 400000: ../BERT-MultiSeq-Rec_Exp/ml-1m-mp1.0-sw0.5-mlp0.2-df10-mpps40-msl200-64/model.ckpt-400000
+I0224 10:05:13.711844 140640140453696 estimator.py:2109] Saving 'checkpoint_path' summary for global step 400000: ../BERT-MultiSeq-Rec_Exp/ml-1m-mp1.0-sw0.5-mlp0.2-df10-mpps40-msl200-64/model.ckpt-400000
+INFO:tensorflow:***** Eval results *****
+I0224 10:05:13.728864 140640140453696 run.py:588] ***** Eval results *****
+INFO:tensorflow:{
+  "attention_probs_dropout_prob": 0.2,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.2,
+  "hidden_size": 64,
+  "initializer_range": 0.02,
+  "intermediate_size": 256,
+  "max_position_embeddings": 200,
+  "num_attention_heads": 2,
+  "num_hidden_layers": 2,
+  "type_vocab_size": 2,
+  "vocab_size": 3420
+}
+
+I0224 10:05:13.729411 140640140453696 run.py:589] {
+  "attention_probs_dropout_prob": 0.2,
+  "hidden_act": "gelu",
+  "hidden_dropout_prob": 0.2,
+  "hidden_size": 64,
+  "initializer_range": 0.02,
+  "intermediate_size": 256,
+  "max_position_embeddings": 200,
+  "num_attention_heads": 2,
+  "num_hidden_layers": 2,
+  "type_vocab_size": 2,
+  "vocab_size": 3420
+}
+
+INFO:tensorflow:  global_step = 400000
+I0224 10:05:13.729727 140640140453696 run.py:592]   global_step = 400000
+INFO:tensorflow:  loss = 6.0340858
+I0224 10:05:13.729836 140640140453696 run.py:592]   loss = 6.0340858
+INFO:tensorflow:  masked_lm_accuracy = 0.02615894
+I0224 10:05:13.729906 140640140453696 run.py:592]   masked_lm_accuracy = 0.02615894
+INFO:tensorflow:  masked_lm_loss = 6.034216
+I0224 10:05:13.729966 140640140453696 run.py:592]   masked_lm_loss = 6.034216
+```

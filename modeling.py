@@ -113,6 +113,7 @@ class BertModel(object):
     ...
     ```
     """
+
     def __init__(self,
                  config,
                  is_training,
@@ -162,12 +163,12 @@ class BertModel(object):
                 # Perform embedding lookup on the word ids.
                 (self.embedding_output,
                  self.embedding_table) = embedding_lookup(
-                     input_ids=input_ids,
-                     vocab_size=config.vocab_size,
-                     embedding_size=config.hidden_size,
-                     initializer_range=config.initializer_range,
-                     word_embedding_name="word_embeddings",
-                     use_one_hot_embeddings=use_one_hot_embeddings)
+                    input_ids=input_ids,
+                    vocab_size=config.vocab_size,
+                    embedding_size=config.hidden_size,
+                    initializer_range=config.initializer_range,
+                    word_embedding_name="word_embeddings",
+                    use_one_hot_embeddings=use_one_hot_embeddings)
 
                 # Add positional embeddings and token type embeddings, then layer
                 # normalize and perform dropout.
@@ -202,7 +203,7 @@ class BertModel(object):
                     intermediate_act_fn=get_activation(config.hidden_act),
                     hidden_dropout_prob=config.hidden_dropout_prob,
                     attention_probs_dropout_prob=config.
-                    attention_probs_dropout_prob,
+                        attention_probs_dropout_prob,
                     initializer_range=config.initializer_range,
                     do_return_all_layers=True)
 
@@ -554,19 +555,19 @@ def create_attention_mask_from_input_mask(from_tensor, to_mask):
 
 
 def cross_attention_layer(from_tensor,
-                    to_tensor,
-                    attention_mask=None,
-                    num_attention_heads=1,
-                    size_per_head=512,
-                    query_act=None,
-                    key_act=None,
-                    value_act=None,
-                    attention_probs_dropout_prob=0.0,
-                    initializer_range=0.02,
-                    do_return_2d_tensor=False,
-                    batch_size=None,
-                    from_seq_length=None,
-                    to_seq_length=None):
+                         to_tensor,
+                         attention_mask=None,
+                         num_attention_heads=1,
+                         size_per_head=512,
+                         query_act=None,
+                         key_act=None,
+                         value_act=None,
+                         attention_probs_dropout_prob=0.0,
+                         initializer_range=0.02,
+                         do_return_2d_tensor=False,
+                         batch_size=None,
+                         from_seq_length=None,
+                         to_seq_length=None):
     """Performs multi-headed attention from `from_tensor` to `to_tensor`.
 
     This is an implementation of multi-headed attention based on "Attention
@@ -723,16 +724,11 @@ def cross_attention_layer(from_tensor,
     attention_probs = dropout(attention_probs, attention_probs_dropout_prob)
     # `attention_probs`= [B, F, N, T]
     attention_probs_head = tf.transpose(attention_probs, [0, 2, 1, 3])
-    # `cross_head_attention` = [B , F, N, N]
-    cross_head_attention = tf.matmul(attention_probs_head,attention_probs_head,transpose_b=True)
-    cross_head_probs = tf.nn.softmax(cross_head_attention)
 
     # `value_layer` = [B, T, N, H]
     value_layer = tf.reshape(
         value_layer,
         [batch_size, to_seq_length, num_attention_heads, size_per_head])
-    # `cross_head_context_layer` = [B, F, N, H]
-    cross_head_context_layer = tf.matmul(cross_head_probs, value_layer)
 
     # `value_layer` = [B, N, T, H]
     value_layer = tf.transpose(value_layer, [0, 2, 1, 3])
@@ -748,10 +744,6 @@ def cross_attention_layer(from_tensor,
         context_layer = tf.reshape(context_layer, [
             batch_size * from_seq_length, num_attention_heads * size_per_head
         ])
-        # `cross_head_context_layer` = [B*F, N*H]
-        cross_head_context_layer = tf.reshape(cross_head_context_layer, [
-            batch_size * from_seq_length, num_attention_heads * size_per_head
-        ])
 
     else:
         # `context_layer` = [B, F, N*H]
@@ -759,11 +751,8 @@ def cross_attention_layer(from_tensor,
             context_layer,
             [batch_size, from_seq_length, num_attention_heads * size_per_head])
         # `cross_head_context_layer` = [B, F, N*H]
-        cross_head_context_layer = tf.reshape(
-            cross_head_context_layer,
-            [batch_size, from_seq_length, num_attention_heads * size_per_head])
 
-    return tf.add(context_layer,cross_head_context_layer)
+    return context_layer
 
 
 def transformer_model(input_tensor,
