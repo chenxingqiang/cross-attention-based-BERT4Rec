@@ -699,9 +699,13 @@ def cross_attention_layer(from_tensor,
     # Take the dot product between "query" and "key" to get the raw
     # attention scores.
     # `attention_scores` = [B, N, F, T]
-    attention_scores = tf.matmul(query_layer, key_layer, transpose_b=True)
-    attention_scores = tf.multiply(attention_scores,
-                                   1.0 / math.sqrt(float(size_per_head)))
+    xy_attention_scores = tf.matmul(query_layer, key_layer, transpose_b=True)
+    xx_attention_scores = tf.matmul(query_layer, query_layer, transpose_b=True)
+    yy_attention_scores = tf.matmul(key_layer, key_layer, transpose_b=True)
+
+    xy_attention_scores = tf.multiply(xy_attention_scores,1.0 / math.sqrt(float(size_per_head)))
+    xx_attention_scores = tf.multiply(xx_attention_scores,1.0 /(2 * math.sqrt(float(size_per_head))))
+    yy_attention_scores = tf.multiply(yy_attention_scores,1.0 /(2* math.sqrt(float(size_per_head))))
     if attention_mask is not None:
         # `attention_mask` = [B, 1, F, T]
         attention_mask = tf.expand_dims(attention_mask, axis=[1])
@@ -713,17 +717,25 @@ def cross_attention_layer(from_tensor,
 
         # Since we are adding it to the raw scores before the softmax, this is
         # effectively the same as removing these entirely.
-        attention_scores += adder
+        xy_attention_scores += adder
+        xx_attention_scores += adder
+        yy_attention_scores += adder
 
     # Normalize the attention scores to probabilities.
     # `attention_probs` = [B, N, F, T]
-    attention_probs = tf.nn.softmax(attention_scores)
+    xy_attention_probs = tf.nn.softmax(xy_attention_scores)
+    xx_attention_probs = tf.nn.softmax(xx_attention_scores)
+    yy_attention_probs = tf.nn.softmax(xx_attention_scores)
 
     # This is actually dropping out entire tokens to attend to, which might
     # seem a bit unusual, but is taken from the original Transformer paper.
-    attention_probs = dropout(attention_probs, attention_probs_dropout_prob)
+    xy_attention_probs = dropout(xy_attention_probs, attention_probs_dropout_prob)
+    xx_attention_probs = dropout(xx_attention_probs, attention_probs_dropout_prob)
+    yy_attention_probs = dropout(yy_attention_probs, attention_probs_dropout_prob)
     # `attention_probs`= [B, F, N, T]
-    attention_probs_head = tf.transpose(attention_probs, [0, 2, 1, 3])
+    xy_attention_probs_head = tf.transpose(xy_attention_probs, [0, 2, 1, 3])
+    yy_attention_probs_head = tf.transpose(yy_attention_probs, [0, 2, 1, 3])
+    xx_attention_probs_head = tf.transpose(xx_attention_probs, [0, 2, 1, 3])
 
     # `value_layer` = [B, T, N, H]
     value_layer = tf.reshape(
@@ -734,25 +746,41 @@ def cross_attention_layer(from_tensor,
     value_layer = tf.transpose(value_layer, [0, 2, 1, 3])
 
     # `context_layer` = [B, N, F, H]
-    context_layer = tf.matmul(attention_probs, value_layer)
+    xy_context_layer = tf.matmul(xy_attention_probs, value_layer)
+    xx_context_layer = tf.matmul(xx_attention_probs, value_layer)
+    yy_context_layer = tf.matmul(yy_attention_probs, value_layer)
 
     # `context_layer` = [B, F, N, H]
-    context_layer = tf.transpose(context_layer, [0, 2, 1, 3])
+    xy_context_layer = tf.transpose(xy_context_layer, [0, 2, 1, 3])
+    xx_context_layer = tf.transpose(xx_context_layer, [0, 2, 1, 3])
+    yy_context_layer = tf.transpose(yy_context_layer, [0, 2, 1, 3])
 
     if do_return_2d_tensor:
         # `context_layer` = [B*F, N*H]
-        context_layer = tf.reshape(context_layer, [
+        xy_context_layer = tf.reshape(xy_context_layer, [
+            batch_size * from_seq_length, num_attention_heads * size_per_head
+        ])
+        xx_context_layer = tf.reshape(xx_context_layer, [
+            batch_size * from_seq_length, num_attention_heads * size_per_head
+        ])
+        yy_context_layer = tf.reshape(yy_context_layer, [
             batch_size * from_seq_length, num_attention_heads * size_per_head
         ])
 
     else:
         # `context_layer` = [B, F, N*H]
-        context_layer = tf.reshape(
-            context_layer,
+        xy_context_layer = tf.reshape(
+            xy_context_layer,
+            [batch_size, from_seq_length, num_attention_heads * size_per_head])
+        xx_context_layer = tf.reshape(
+            xx_context_layer,
+            [batch_size, from_seq_length, num_attention_heads * size_per_head])
+        yy_context_layer = tf.reshape(
+            yy_context_layer,
             [batch_size, from_seq_length, num_attention_heads * size_per_head])
         # `cross_head_context_layer` = [B, F, N*H]
 
-    return context_layer
+    return tf.add(tf.add(xx_context_layer,yy_context_layer),xy_context_layer)
 
 
 def transformer_model(input_tensor,
