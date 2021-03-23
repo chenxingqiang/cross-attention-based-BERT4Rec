@@ -10,7 +10,6 @@ import sys
 import tensorflow as tf
 
 import six
-from numpy import unicode
 
 from util import *
 from vocab import *
@@ -248,7 +247,7 @@ def create_training_instances(all_documents_raw,
                 print("got empty seq:" + user)
                 continue
 
-            # todo: add slide
+            #todo: add slide
             if len(item_seq) <= max_num_tokens:
                 all_documents[user] = [item_seq]
             else:
@@ -495,7 +494,7 @@ def gen_samples(data,
                                     max_predictions_per_seq, vocab,
                                     [output_filename])
 
-########################################################################################################################
+
 def main():
     tf.logging.set_verbosity(tf.logging.DEBUG)
     

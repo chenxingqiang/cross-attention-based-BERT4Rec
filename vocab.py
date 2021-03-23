@@ -10,7 +10,7 @@ def convert_by_vocab(vocab, items):
 
 
 class FreqVocab(object):
-    """Runs end-to-end tokenization."""
+    """Runs end-to-end tokenziation."""
 
     def __init__(self, user_to_list):
         # layout of the  ulary
@@ -18,7 +18,7 @@ class FreqVocab(object):
         # special token
         # user_id based on nothing
         self.counter = Counter(
-        )  # sorted(self.items(), key=_itemgetter(1), reverse=True)
+        )  #sorted(self.items(), key=_itemgetter(1), reverse=True)
         self.user_set = set()
         for u, item_list in user_to_list.items():
             self.counter.update(item_list)
@@ -28,7 +28,7 @@ class FreqVocab(object):
         self.item_count = len(self.counter.keys())
         self.special_tokens = {"[pad]", "[MASK]", '[NO_USE]'}
         self.token_to_ids = {}  # index begin from 1
-        # first items
+        #first items
         for token, count in self.counter.most_common():
             self.token_to_ids[token] = len(self.token_to_ids) + 1
 
@@ -71,5 +71,4 @@ class FreqVocab(object):
         return self.special_tokens
 
     def get_vocab_size(self):
-        return self.get_item_count() + self.get_special_token_count() + 1
-        # self.get_user_count()
+        return self.get_item_count() + self.get_special_token_count() + 1 #self.get_user_count()

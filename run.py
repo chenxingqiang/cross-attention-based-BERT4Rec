@@ -25,12 +25,11 @@ import tensorflow as tf
 import numpy as np
 import sys
 import pickle
-
 flags = tf.flags
 
 FLAGS = flags.FLAGS
 
-# Required parameters
+## Required parameters
 flags.DEFINE_string(
     "bert_config_file", None,
     "The config json file corresponding to the pre-trained BERT model. "
@@ -69,10 +68,10 @@ flags.DEFINE_bool("do_train", False, "Whether to run training.")
 
 flags.DEFINE_bool("do_eval", False, "Whether to run eval on the dev set.")
 
-# flags.DEFINE_integer("train_batch_size", 32, "Total batch size for training.")
+#flags.DEFINE_integer("train_batch_size", 32, "Total batch size for training.")
 flags.DEFINE_integer("batch_size", 32, "Total batch size for training.")
 
-# flags.DEFINE_integer("eval_batch_size", 1, "Total batch size for eval.")
+#flags.DEFINE_integer("eval_batch_size", 1, "Total batch size for eval.")
 
 flags.DEFINE_float("learning_rate", 5e-5,
                    "The initial learning rate for Adam.")
@@ -120,12 +119,14 @@ flags.DEFINE_string("vocab_filename", None, "vocab filename")
 flags.DEFINE_string("user_history_filename", None, "user history filename")
 
 
+
 class EvalHooks(tf.train.SessionRunHook):
     def __init__(self):
         tf.logging.info('run init')
 
     def begin(self):
         self.valid_user = 0.0
+
         self.ndcg_1 = 0.0
         self.hit_1 = 0.0
         self.ndcg_5 = 0.0
@@ -160,26 +161,26 @@ class EvalHooks(tf.train.SessionRunHook):
     def end(self, session):
         print(
             "ndcg@1:{}, hit@1:{}， ndcg@5:{}, hit@5:{}, ndcg@10:{}, hit@10:{}, ap:{}, valid_user:{}".
-                format(self.ndcg_1 / self.valid_user, self.hit_1 / self.valid_user,
-                       self.ndcg_5 / self.valid_user, self.hit_5 / self.valid_user,
-                       self.ndcg_10 / self.valid_user,
-                       self.hit_10 / self.valid_user, self.ap / self.valid_user,
-                       self.valid_user))
+            format(self.ndcg_1 / self.valid_user, self.hit_1 / self.valid_user,
+                   self.ndcg_5 / self.valid_user, self.hit_5 / self.valid_user,
+                   self.ndcg_10 / self.valid_user,
+                   self.hit_10 / self.valid_user, self.ap / self.valid_user,
+                   self.valid_user))
 
     def before_run(self, run_context):
-        # tf.logging.info('run before run')
-        # print('run before_run')
+        #tf.logging.info('run before run')
+        #print('run before_run')
         variables = tf.get_collection('eval_sp')
         return tf.train.SessionRunArgs(variables)
 
     def after_run(self, run_context, run_values):
-        # tf.logging.info('run after run')
-        # print('run after run')
+        #tf.logging.info('run after run')
+        #print('run after run')
         masked_lm_log_probs, input_ids, masked_lm_ids, info = run_values.results
         masked_lm_log_probs = masked_lm_log_probs.reshape(
             (-1, FLAGS.max_predictions_per_seq, masked_lm_log_probs.shape[1]))
-        #         print("loss value:", masked_lm_log_probs.shape, input_ids.shape,
-        #               masked_lm_ids.shape, info.shape)
+#         print("loss value:", masked_lm_log_probs.shape, input_ids.shape,
+#               masked_lm_ids.shape, info.shape)
 
         for idx in range(len(input_ids)):
             rated = set(input_ids[idx])
@@ -189,7 +190,7 @@ class EvalHooks(tf.train.SessionRunHook):
                 self.user_history["user_" + str(info[idx][0])][0])
             item_idx = [masked_lm_ids[idx][0]]
             # here we need more consideration
-            masked_lm_log_probs_elem = masked_lm_log_probs[idx, 0]
+            masked_lm_log_probs_elem = masked_lm_log_probs[idx, 0]  
             size_of_prob = len(self.ids) + 1  # len(masked_lm_log_probs_elem)
             if FLAGS.use_pop_random:
                 if self.vocab is not None:
@@ -257,17 +258,17 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
             input_mask=input_mask,
             token_type_ids=None,
             use_one_hot_embeddings=use_one_hot_embeddings)
-
-        #         all_user_and_item = model.get_embedding_table()
-        #         item_ids = [i for i in range(0, item_size + 1)]
-        #         softmax_output_embedding = tf.nn.embedding_lookup(all_user_and_item, item_ids)
+        
+#         all_user_and_item = model.get_embedding_table()
+#         item_ids = [i for i in range(0, item_size + 1)]
+#         softmax_output_embedding = tf.nn.embedding_lookup(all_user_and_item, item_ids)
 
         (masked_lm_loss,
          masked_lm_example_loss, masked_lm_log_probs) = get_masked_lm_output(
-            bert_config,
-            model.get_sequence_output(),
-            model.get_embedding_table(), masked_lm_positions, masked_lm_ids,
-            masked_lm_weights)
+             bert_config,
+             model.get_sequence_output(),
+             model.get_embedding_table(), masked_lm_positions, masked_lm_ids,
+             masked_lm_weights)
 
         total_loss = masked_lm_loss
 
@@ -278,7 +279,7 @@ def model_fn_builder(bert_config, init_checkpoint, learning_rate,
         if init_checkpoint:
             (assignment_map, initialized_variable_names
              ) = modeling.get_assignment_map_from_checkpoint(
-                tvars, init_checkpoint)
+                 tvars, init_checkpoint)
             if use_tpu:
 
                 def tpu_scaffold():
@@ -433,17 +434,17 @@ def input_fn_builder(input_files,
 
         name_to_features = {
             "info":
-                tf.FixedLenFeature([1], tf.int64),  # [user]
+            tf.FixedLenFeature([1], tf.int64),  #[user]
             "input_ids":
-                tf.FixedLenFeature([max_seq_length], tf.int64),
+            tf.FixedLenFeature([max_seq_length], tf.int64),
             "input_mask":
-                tf.FixedLenFeature([max_seq_length], tf.int64),
+            tf.FixedLenFeature([max_seq_length], tf.int64),
             "masked_lm_positions":
-                tf.FixedLenFeature([max_predictions_per_seq], tf.int64),
+            tf.FixedLenFeature([max_predictions_per_seq], tf.int64),
             "masked_lm_ids":
-                tf.FixedLenFeature([max_predictions_per_seq], tf.int64),
+            tf.FixedLenFeature([max_predictions_per_seq], tf.int64),
             "masked_lm_weights":
-                tf.FixedLenFeature([max_predictions_per_seq], tf.float32)
+            tf.FixedLenFeature([max_predictions_per_seq], tf.float32)
         }
 
         # For training, we want a lot of parallel reading and shuffling.
@@ -454,18 +455,19 @@ def input_fn_builder(input_files,
             d = d.shuffle(buffer_size=100)
 
             # `cycle_length` is the number of parallel files that get read.
-            # cycle_length = min(num_cpu_threads, len(input_files))
+            #cycle_length = min(num_cpu_threads, len(input_files))
 
             # `sloppy` mode means that the interleaving is not exact. This adds
             # even more randomness to the training pipeline.
-            # d = d.apply(
+            #d = d.apply(
             #    tf.contrib.data.parallel_interleave(
             #        tf.data.TFRecordDataset,
             #        sloppy=is_training,
             #        cycle_length=cycle_length))
-            # d = d.shuffle(buffer_size=100)
+            #d = d.shuffle(buffer_size=100)
         else:
             d = tf.data.TFRecordDataset(input_files)
+
 
         d = d.map(
             lambda record: _decode_record(record, name_to_features),
@@ -526,11 +528,11 @@ def main(_):
 
     tpu_cluster_resolver = None
 
-    # is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
+    #is_per_host = tf.contrib.tpu.InputPipelineConfig.PER_HOST_V2
     run_config = tf.estimator.RunConfig(
         model_dir=FLAGS.checkpointDir,
         save_checkpoints_steps=FLAGS.save_checkpoints_steps)
-
+    
     if FLAGS.vocab_filename is not None:
         with open(FLAGS.vocab_filename, 'rb') as input_file:
             vocab = pickle.load(input_file)
@@ -576,7 +578,7 @@ def main(_):
             max_predictions_per_seq=FLAGS.max_predictions_per_seq,
             is_training=False)
 
-        # tf.logging.info('special eval ops:', special_eval_ops)
+        #tf.logging.info('special eval ops:', special_eval_ops)
         result = estimator.evaluate(
             input_fn=eval_input_fn,
             steps=None,
@@ -587,7 +589,7 @@ def main(_):
         with tf.gfile.GFile(output_eval_file, "w") as writer:
             tf.logging.info("***** Eval results *****")
             tf.logging.info(bert_config.to_json_string())
-            writer.write(bert_config.to_json_string() + '\n')
+            writer.write(bert_config.to_json_string()+'\n')
             for key in sorted(result.keys()):
                 tf.logging.info("  %s = %s", key, str(result[key]))
                 writer.write("%s = %s\n" % (key, str(result[key])))
