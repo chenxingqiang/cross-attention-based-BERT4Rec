@@ -1,5 +1,7 @@
 # Cross-Attention Based BERT4Rec
 
+Cross Attention 
+
 
 ## Usage
 
@@ -71,31 +73,3 @@ json in `bert_train` like `bert_config_ml-1m_64.json`
 ```
 
 
-## Reference
-
-```TeX
-@inproceedings{Sun:2019:BSR:3357384.3357895,
- author = {Sun, Fei and Liu, Jun and Wu, Jian and Pei, Changhua and Lin, Xiao and Ou, Wenwu and Jiang, Peng},
- title = {BERT4Rec: Sequential Recommendation with Bidirectional Encoder Representations from Transformer},
- booktitle = {Proceedings of the 28th ACM International Conference on Information and Knowledge Management},
- series = {CIKM '19},
- year = {2019},
- isbn = {978-1-4503-6976-3},
- location = {Beijing, China},
- pages = {1441--1450},
- numpages = {10},
- url = {http://doi.acm.org/10.1145/3357384.3357895},
- doi = {10.1145/3357384.3357895},
- acmid = {3357895},
- publisher = {ACM},
- address = {New York, NY, USA}
-} 
-```
-```@InProceedings{Yu_2020_CVPR,
-author = {Yu, Yuechen and Xiong, Yilei and Huang, Weilin and Scott, Matthew R.},
-title = {Deformable Siamese Attention Networks for Visual Object Tracking},
-booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
-month = {June},
-year = {2020}
-}
-```
